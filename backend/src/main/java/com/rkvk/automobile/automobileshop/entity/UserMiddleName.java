@@ -5,19 +5,21 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "user_middle_names")
+@Table(name = "user_middle_name")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@IdClass(UserMiddleNameId.class)
 public class UserMiddleName {
 
-    @Id
-    private Long userId;
+    @EmbeddedId
+    private UserMiddleNameId id;
 
-    @Id
-    private String middleName;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("userId")
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
+    private User user;
 
+    @Column(name = "middle_name_order")
     private int middleNameOrder;
 }

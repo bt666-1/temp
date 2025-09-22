@@ -11,10 +11,15 @@ import java.util.Optional;
 
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
+
     List<Customer> findByLastName(String lastName);
 
     List<Customer> findByCity(String city);
 
-    @Query("SELECT c FROM Customer c JOIN CustomerEmail e ON c.customerId = e.customerId WHERE e.email = :email")
+    @Query("""
+           SELECT c FROM Customer c
+           JOIN CustomerEmail e ON c.customerId = e.id.customerId
+           WHERE e.id.email = :email
+           """)
     Optional<Customer> findByEmail(@Param("email") String email);
 }

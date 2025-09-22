@@ -9,24 +9,22 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "customer_middle_names")
+@Table(name = "customer_middle_name")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class CustomerMiddleName {
 
-    // Composite primary key
     @EmbeddedId
     private CustomerMiddleNameId id;
 
-    // Extra attribute
-    private int middleNameOrder;
-
-    // Foreign key to Customer
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("customerId")
-    @JoinColumn(name = "customer_id", nullable = false)
+    @JoinColumn(name = "customer_id", referencedColumnName = "customer_id", nullable = false)
     @JsonBackReference
     private Customer customer;
+
+    @Column(name = "middle_name_order")
+    private int middleNameOrder;
 }

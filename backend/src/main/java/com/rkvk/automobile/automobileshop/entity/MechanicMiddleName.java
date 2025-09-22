@@ -4,20 +4,23 @@ import com.rkvk.automobile.automobileshop.entity.id.MechanicMiddleNameId;
 import jakarta.persistence.*;
 import lombok.*;
 
+
 @Entity
-@Table(name = "mechanic_middle_names")
+@Table(name = "mechanic_middle_name")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@IdClass(MechanicMiddleNameId.class)
 public class MechanicMiddleName {
 
-    @Id
-    private Long mechanicId;
+    @EmbeddedId
+    private MechanicMiddleNameId id;
 
-    @Id
-    private String middleName;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("mechanicId")
+    @JoinColumn(name = "mechanic_id", referencedColumnName = "mechanic_id", nullable = false)
+    private Mechanic mechanic;
 
+    @Column(name = "middle_name_order")
     private int middleNameOrder;
 }

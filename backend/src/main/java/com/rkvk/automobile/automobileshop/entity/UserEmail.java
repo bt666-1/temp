@@ -5,17 +5,19 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "user_emails")
+@Table(name = "user_email")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@IdClass(UserEmailId.class)
 public class UserEmail {
 
-    @Id
-    private Long userId;
+    @EmbeddedId
+    private UserEmailId id;
 
-    @Id
-    private String email;
+     @ManyToOne
+     @MapsId("userId")
+     @JoinColumn(name = "user_id", referencedColumnName = "user_id")
+     private User user;
 }
+

@@ -1,27 +1,25 @@
 package com.rkvk.automobile.automobileshop.entity;
 
 import com.rkvk.automobile.automobileshop.entity.id.CustomerEmailId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "customer_emails")
+@Table(name = "customer_email")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@IdClass(CustomerEmailId.class)
 public class CustomerEmail {
-    @Id
-    private Long customerId;
 
-    @Id
-    private String email;
+    @EmbeddedId
+    private CustomerEmailId id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("customerId")
+    @JoinColumn(name = "customer_id", referencedColumnName = "customer_id", nullable = false)
+    private Customer customer;
 }
-

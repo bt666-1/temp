@@ -1,14 +1,12 @@
 package com.rkvk.automobile.automobileshop.entity;
 
 import com.rkvk.automobile.automobileshop.entity.id.CanDoId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 
 @Entity
 @Table(name = "can_do")
@@ -16,12 +14,19 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@IdClass(CanDoId.class)
 public class CanDo {
-    @Id
-    private Long mechanicId;
 
-    @Id
-    private Long serviceId;
+    @EmbeddedId
+    private CanDoId id;
+
+    @ManyToOne
+    @MapsId("mechanicId") // maps composite key mechanicId
+    @JoinColumn(name = "mechanic_id", referencedColumnName = "mechanic_id")
+    private Mechanic mechanic;
+
+    @ManyToOne
+    @MapsId("serviceId") // maps composite key serviceId
+    @JoinColumn(name = "service_id", referencedColumnName = "service_id")
+    private ServiceEntity service;
 }
 

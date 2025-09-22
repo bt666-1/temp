@@ -5,17 +5,19 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "mechanic_phones")
+@Table(name = "mechanic_phone")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@IdClass(MechanicPhoneId.class)
 public class MechanicPhone {
 
-    @Id
-    private Long mechanicId;
+    @EmbeddedId
+    private MechanicPhoneId id;
 
-    @Id
-    private String phoneNo;
+    @ManyToOne
+    @MapsId("mechanicId")
+    @JoinColumn(name = "mechanic_id", referencedColumnName = "mechanic_id")
+    private Mechanic mechanic;
 }
+

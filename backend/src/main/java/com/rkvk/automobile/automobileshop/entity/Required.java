@@ -1,10 +1,7 @@
 package com.rkvk.automobile.automobileshop.entity;
 
 import com.rkvk.automobile.automobileshop.entity.id.RequiredId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,14 +13,22 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@IdClass(RequiredId.class)
 public class Required {
-    @Id
-    private Long invoiceId;
 
-    @Id
-    private Long mechanicId;
+    @EmbeddedId
+    private RequiredId id;
 
+    @ManyToOne
+    @MapsId("invoiceId")
+    @JoinColumn(name = "invoice_id", referencedColumnName = "invoice_id")
+    private Invoice invoice;
+
+    @ManyToOne
+    @MapsId("mechanicId")
+    @JoinColumn(name = "mechanic_id", referencedColumnName = "mechanic_id")
+    private Mechanic mechanic;
+
+    @Column(name = "description")
     private String description;
 }
 
