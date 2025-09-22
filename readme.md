@@ -19,8 +19,8 @@ It demonstrates: - Database schema design and normalization\
 
 ## Student Details
 
--   **Name**: Atul Kumar Pandey\
--   **Roll Number**: 23074006\
+-   **Name**: Thakkarwad Basweshwar Pradeep\
+-   **Roll Number**: 23074030\
 -   **Program**: CSE (Integrated Dual Degree), 3rd Year\
 -   **Course**: Database Management Systems\
 -   **Instructor**: Rabindranath Choudhary C

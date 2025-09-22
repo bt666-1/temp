@@ -56,23 +56,23 @@ public class CustomerService {
         customerRepository.deleteById(id);
     }
 
-    public CustomerMiddleName addMiddleName(Long customerId, String middleName, int order) {
-        CustomerMiddleName entity = new CustomerMiddleName(customerId, middleName, order);
-        return middleNameRepository.save(entity);
-    }
-
-    public List<CustomerMiddleName> getMiddleNames(Long customerId) {
-        return middleNameRepository.findAll()
-                .stream()
-                .filter(m -> m.getCustomerId().equals(customerId))
-                .toList();
-    }
-
-    public void deleteMiddleName(Long customerId, String middleName) {
-        CustomerMiddleNameId id = new CustomerMiddleNameId(customerId, middleName);
-        middleNameRepository.deleteById(id);
-    }
-
+    //    public CustomerMiddleName addMiddleName(Long customerId, String middleName, int order) {
+//        CustomerMiddleName entity = new CustomerMiddleName(customerId, middleName, order);
+//        return middleNameRepository.save(entity);
+//    }
+//
+//    public List<CustomerMiddleName> getMiddleNames(Long customerId) {
+//        return middleNameRepository.findAll()
+//                .stream()
+//                .filter(m -> m.getCustomerId().equals(customerId))
+//                .toList();
+//    }
+//
+//    public void deleteMiddleName(Long customerId, String middleName) {
+//        CustomerMiddleNameId id = new CustomerMiddleNameId(customerId, middleName);
+//        middleNameRepository.deleteById(id);
+//    }
+    
     public CustomerEmail addEmail(Long customerId, String email) {
         CustomerEmail entity = new CustomerEmail(customerId, email);
         return emailRepository.save(entity);
