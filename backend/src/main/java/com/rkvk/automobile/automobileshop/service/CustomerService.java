@@ -1,21 +1,18 @@
 package com.rkvk.automobile.automobileshop.service;
 
+import com.rkvk.automobile.automobileshop.dto.CustomerDTO;
 import com.rkvk.automobile.automobileshop.entity.Customer;
 import com.rkvk.automobile.automobileshop.entity.CustomerEmail;
 import com.rkvk.automobile.automobileshop.entity.CustomerMiddleName;
 import com.rkvk.automobile.automobileshop.entity.id.CustomerEmailId;
 import com.rkvk.automobile.automobileshop.entity.id.CustomerMiddleNameId;
+import com.rkvk.automobile.automobileshop.mapper.CustomerMapper;
 import com.rkvk.automobile.automobileshop.repository.CustomerEmailRepository;
 import com.rkvk.automobile.automobileshop.repository.CustomerMiddleNameRepository;
 import com.rkvk.automobile.automobileshop.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,89 +23,121 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerMiddleNameRepository middleNameRepository;
     private final CustomerEmailRepository emailRepository;
+    private final CustomerMapper customerMapper;
 
-    // Basic Customer CRUD
+    // Add Customer with middle names & emails
+    public Customer addCustomer(CustomerDTO dto) {
+        Customer customer = customerMapper.dtoToEntity(dto);
+        Customer savedCustomer = customerRepository.save(customer);
 
-    public Customer addCustomer(Customer customer) {
-        return customerRepository.save(customer);
+        saveMiddleNamesAndEmails(savedCustomer, dto);
+
+        return savedCustomer;
     }
 
-    public List<Customer> getAllCustomers() {
-        return customerRepository.findAll();
-    }
-
-    public Optional<Customer> getCustomerById(Long id) {
-        return customerRepository.findById(id);
-    }
-
-    public Customer updateCustomer(Long id, Customer updatedCustomer) {
+    public Customer updateCustomer(Long id, CustomerDTO dto) {
         Customer existingCustomer = customerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
 
-        existingCustomer.setFirstName(updatedCustomer.getFirstName());
-        existingCustomer.setLastName(updatedCustomer.getLastName());
-        existingCustomer.setHouseNo(updatedCustomer.getHouseNo());
-        existingCustomer.setStreet(updatedCustomer.getStreet());
-        existingCustomer.setLocality(updatedCustomer.getLocality());
-        existingCustomer.setCity(updatedCustomer.getCity());
-        existingCustomer.setPinCode(updatedCustomer.getPinCode());
+        existingCustomer.setFirstName(dto.getFirstName());
+        existingCustomer.setLastName(dto.getLastName());
+        existingCustomer.setHouseNo(dto.getHouseNo());
+        existingCustomer.setStreet(dto.getStreet());
+        existingCustomer.setLocality(dto.getLocality());
+        existingCustomer.setCity(dto.getCity());
+        existingCustomer.setPinCode(dto.getPinCode());
 
-        return customerRepository.save(existingCustomer);
+        Customer savedCustomer = customerRepository.save(existingCustomer);
+
+        // Replace old middle names & emails
+        if (dto.getMiddleNames() != null) {
+            middleNameRepository.deleteAll(middleNameRepository.findByIdCustomerId(id));
+        }
+        if (dto.getEmails() != null) {
+            emailRepository.deleteAll(emailRepository.findByIdCustomerId(id));
+        }
+
+        saveMiddleNamesAndEmails(savedCustomer, dto);
+
+        return savedCustomer;
+    }
+
+    public CustomerDTO getCustomerById(Long id) {
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
+
+        CustomerDTO dto = customerMapper.entityToDto(customer);
+
+        List<String> middleNames = middleNameRepository.findByIdCustomerId(id)
+                .stream()
+                .map(m -> m.getId().getMiddleName())
+                .toList();
+        dto.setMiddleNames(middleNames);
+
+        List<String> emails = emailRepository.findByIdCustomerId(id)
+                .stream()
+                .map(e -> e.getId().getEmail())
+                .toList();
+        dto.setEmails(emails);
+
+        return dto;
+    }
+
+    public List<CustomerDTO> getAllCustomers() {
+        List<Customer> customers = customerRepository.findAll();
+
+        return customers.stream().map(customer -> {
+            CustomerDTO dto = customerMapper.entityToDto(customer);
+
+            // middle names
+            List<String> middleNames = middleNameRepository.findByIdCustomerId(customer.getCustomerId())
+                    .stream()
+                    .map(m -> m.getId().getMiddleName())
+                    .toList();
+            dto.setMiddleNames(middleNames);
+
+            // emails
+            List<String> emails = emailRepository.findByIdCustomerId(customer.getCustomerId())
+                    .stream()
+                    .map(e -> e.getId().getEmail())
+                    .toList();
+            dto.setEmails(emails);
+
+            return dto;
+        }).toList();
     }
 
     public void deleteCustomer(Long id) {
-        if (!customerRepository.existsById(id)) {
-            throw new RuntimeException("Customer not found with id: " + id);
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
+        customerRepository.delete(customer);
+    }
+
+
+    private void saveMiddleNamesAndEmails(Customer customer, CustomerDTO dto) {
+        if (dto.getMiddleNames() != null) {
+            int order = 1;
+            for (String middleName : dto.getMiddleNames()) {
+                CustomerMiddleNameId id = new CustomerMiddleNameId(customer.getCustomerId(), middleName);
+                CustomerMiddleName cmn = CustomerMiddleName.builder()
+                        .id(id)
+                        .middleNameOrder(order++)
+                        .customer(customer)
+                        .build();
+                middleNameRepository.save(cmn);
+            }
         }
-        customerRepository.deleteById(id);
-    }
 
-    // Customer Middle Names
-
-    public CustomerMiddleName addMiddleName(Long customerId, String middleName, int order) {
-        CustomerMiddleNameId id = new CustomerMiddleNameId(customerId, middleName);
-        CustomerMiddleName entity = CustomerMiddleName.builder()
-                .id(id)
-                .middleNameOrder(order)
-                .customer(customerRepository.findById(customerId)
-                        .orElseThrow(() -> new RuntimeException("Customer not found")))
-                .build();
-        return middleNameRepository.save(entity);
-    }
-
-    public List<CustomerMiddleName> getMiddleNames(Long customerId) {
-        return middleNameRepository.findAll()
-                .stream()
-                .filter(m -> m.getId().getCustomerId().equals(customerId))
-                .toList();
-    }
-
-    public void deleteMiddleName(Long customerId, String middleName) {
-        CustomerMiddleNameId id = new CustomerMiddleNameId(customerId, middleName);
-        middleNameRepository.deleteById(id);
-    }
-
-    // Customer Emails
-
-    public CustomerEmail addEmail(Long customerId, String email) {
-        CustomerEmailId id = new CustomerEmailId(customerId, email);
-        CustomerEmail entity = CustomerEmail.builder()
-                .id(id)
-                .customer(customerRepository.findById(customerId)
-                        .orElseThrow(() -> new RuntimeException("Customer not found")))
-                .build();
-        return emailRepository.save(entity);
-    }
-
-    public List<CustomerEmail> getEmails(Long customerId) {
-        return emailRepository.findAll()
-                .stream()
-                .filter(e -> e.getId().getCustomerId().equals(customerId))
-                .toList();
-    }
-
-    public void deleteEmail(Long customerId, String email) {
-        CustomerEmailId id = new CustomerEmailId(customerId, email);
-        emailRepository.deleteById(id);
+        if (dto.getEmails() != null) {
+            for (String email : dto.getEmails()) {
+                CustomerEmailId id = new CustomerEmailId(customer.getCustomerId(), email);
+                CustomerEmail ce = CustomerEmail.builder()
+                        .id(id)
+                        .customer(customer)
+                        .build();
+                emailRepository.save(ce);
+            }
+        }
     }
 }
+
