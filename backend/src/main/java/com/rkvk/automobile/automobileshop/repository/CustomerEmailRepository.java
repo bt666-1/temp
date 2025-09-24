@@ -15,4 +15,6 @@ public interface CustomerEmailRepository extends JpaRepository<CustomerEmail, Cu
     // Query by customer ID using the embedded ID
     @Query("SELECT e FROM CustomerEmail e WHERE e.id.customerId = :customerId")
     List<CustomerEmail> findByCustomerId(@Param("customerId") Long customerId);
+
+    List<CustomerEmail> findByIdCustomerId(Long customerId);
 }
