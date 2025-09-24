@@ -6,6 +6,7 @@ import com.rkvk.automobile.automobileshop.entity.CustomerEmail;
 import com.rkvk.automobile.automobileshop.entity.CustomerMiddleName;
 import com.rkvk.automobile.automobileshop.entity.id.CustomerEmailId;
 import com.rkvk.automobile.automobileshop.entity.id.CustomerMiddleNameId;
+import com.rkvk.automobile.automobileshop.exception.ResourceNotFoundException;
 import com.rkvk.automobile.automobileshop.mapper.CustomerMapper;
 import com.rkvk.automobile.automobileshop.repository.CustomerEmailRepository;
 import com.rkvk.automobile.automobileshop.repository.CustomerMiddleNameRepository;
@@ -37,7 +38,7 @@ public class CustomerService {
 
     public Customer updateCustomer(Long id, CustomerDTO dto) {
         Customer existingCustomer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + id));
 
         existingCustomer.setFirstName(dto.getFirstName());
         existingCustomer.setLastName(dto.getLastName());
@@ -64,7 +65,8 @@ public class CustomerService {
 
     public CustomerDTO getCustomerById(Long id) {
         Customer customer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + id));
+
 
         CustomerDTO dto = customerMapper.entityToDto(customer);
 
@@ -109,7 +111,8 @@ public class CustomerService {
 
     public void deleteCustomer(Long id) {
         Customer customer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + id));
+
         customerRepository.delete(customer);
     }
 
