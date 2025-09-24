@@ -1,6 +1,8 @@
 package com.rkvk.automobile.automobileshop.service;
 
 import com.rkvk.automobile.automobileshop.dto.CustomerDTO;
+import com.rkvk.automobile.automobileshop.dto.CustomerEmailDTO;
+import com.rkvk.automobile.automobileshop.dto.CustomerMiddleNameDTO;
 import com.rkvk.automobile.automobileshop.entity.Customer;
 import com.rkvk.automobile.automobileshop.entity.CustomerEmail;
 import com.rkvk.automobile.automobileshop.entity.CustomerMiddleName;
@@ -15,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +27,6 @@ public class CustomerService {
     private final CustomerEmailRepository emailRepository;
     private final CustomerMapper customerMapper;
 
-    // Add Customer with middle names & emails
     public Customer addCustomer(CustomerDTO dto) {
         Customer customer = customerMapper.dtoToEntity(dto);
         Customer savedCustomer = customerRepository.save(customer);
@@ -50,7 +50,7 @@ public class CustomerService {
 
         Customer savedCustomer = customerRepository.save(existingCustomer);
 
-        // Replace old middle names & emails
+        // Replace old middle names & emails if new ones provided
         if (dto.getMiddleNames() != null) {
             middleNameRepository.deleteAll(middleNameRepository.findByIdCustomerId(id));
         }
@@ -69,16 +69,26 @@ public class CustomerService {
 
 
         CustomerDTO dto = customerMapper.entityToDto(customer);
+        dto.setCustomerId(customer.getCustomerId());
 
-        List<String> middleNames = middleNameRepository.findByIdCustomerId(id)
+        // middle names
+        List<CustomerMiddleNameDTO> middleNames = middleNameRepository.findByIdCustomerId(id)
                 .stream()
-                .map(m -> m.getId().getMiddleName())
+                .map(m -> new CustomerMiddleNameDTO(
+                        m.getId().getCustomerId(),
+                        m.getId().getMiddleName(),
+                        m.getMiddleNameOrder()
+                ))
                 .toList();
         dto.setMiddleNames(middleNames);
 
-        List<String> emails = emailRepository.findByIdCustomerId(id)
+        // emails
+        List<CustomerEmailDTO> emails = emailRepository.findByIdCustomerId(id)
                 .stream()
-                .map(e -> e.getId().getEmail())
+                .map(e -> new CustomerEmailDTO(
+                        e.getId().getCustomerId(),
+                        e.getId().getEmail()
+                ))
                 .toList();
         dto.setEmails(emails);
 
@@ -90,18 +100,26 @@ public class CustomerService {
 
         return customers.stream().map(customer -> {
             CustomerDTO dto = customerMapper.entityToDto(customer);
+            dto.setCustomerId(customer.getCustomerId());
 
             // middle names
-            List<String> middleNames = middleNameRepository.findByIdCustomerId(customer.getCustomerId())
+            List<CustomerMiddleNameDTO> middleNames = middleNameRepository.findByIdCustomerId(customer.getCustomerId())
                     .stream()
-                    .map(m -> m.getId().getMiddleName())
+                    .map(m -> new CustomerMiddleNameDTO(
+                            m.getId().getCustomerId(),
+                            m.getId().getMiddleName(),
+                            m.getMiddleNameOrder()
+                    ))
                     .toList();
             dto.setMiddleNames(middleNames);
 
             // emails
-            List<String> emails = emailRepository.findByIdCustomerId(customer.getCustomerId())
+            List<CustomerEmailDTO> emails = emailRepository.findByIdCustomerId(customer.getCustomerId())
                     .stream()
-                    .map(e -> e.getId().getEmail())
+                    .map(e -> new CustomerEmailDTO(
+                            e.getId().getCustomerId(),
+                            e.getId().getEmail()
+                    ))
                     .toList();
             dto.setEmails(emails);
 
@@ -116,15 +134,13 @@ public class CustomerService {
         customerRepository.delete(customer);
     }
 
-
     private void saveMiddleNamesAndEmails(Customer customer, CustomerDTO dto) {
         if (dto.getMiddleNames() != null) {
-            int order = 1;
-            for (String middleName : dto.getMiddleNames()) {
-                CustomerMiddleNameId id = new CustomerMiddleNameId(customer.getCustomerId(), middleName);
+            for (CustomerMiddleNameDTO mDto : dto.getMiddleNames()) {
+                CustomerMiddleNameId id = new CustomerMiddleNameId(customer.getCustomerId(), mDto.getMiddleName());
                 CustomerMiddleName cmn = CustomerMiddleName.builder()
                         .id(id)
-                        .middleNameOrder(order++)
+                        .middleNameOrder(mDto.getOrder())
                         .customer(customer)
                         .build();
                 middleNameRepository.save(cmn);
@@ -132,8 +148,8 @@ public class CustomerService {
         }
 
         if (dto.getEmails() != null) {
-            for (String email : dto.getEmails()) {
-                CustomerEmailId id = new CustomerEmailId(customer.getCustomerId(), email);
+            for (CustomerEmailDTO eDto : dto.getEmails()) {
+                CustomerEmailId id = new CustomerEmailId(customer.getCustomerId(), eDto.getEmail());
                 CustomerEmail ce = CustomerEmail.builder()
                         .id(id)
                         .customer(customer)
@@ -143,4 +159,3 @@ public class CustomerService {
         }
     }
 }
-
